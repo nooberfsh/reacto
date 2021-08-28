@@ -1,4 +1,5 @@
 use crate::chars::Chars;
+use crate::span::Span;
 
 pub trait Lex {
     fn chars(&self) -> &Chars;
@@ -55,5 +56,11 @@ pub trait Lex {
             num += 1;
         }
         num
+    }
+
+    fn span(&self) -> Span {
+        let start = self.start();
+        let end = self.cursor();
+        Span::new(start, end)
     }
 }
