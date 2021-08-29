@@ -1,7 +1,7 @@
+use crate::ast::N;
+use crate::chars::Chars;
 use crate::node_id::IdGen;
 use crate::span::{Span, S};
-use crate::chars::Chars;
-use crate::ast::N;
 
 #[derive(Clone, Debug)]
 pub struct ParseCtx<T> {
@@ -37,7 +37,10 @@ pub trait Parse {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // provided
 
-    fn parse<T>(&mut self, f: impl Fn(&mut Self) -> Result<T, Self::Error>) -> Result<T, Self::Error> {
+    fn parse<T>(
+        &mut self,
+        f: impl Fn(&mut Self) -> Result<T, Self::Error>,
+    ) -> Result<T, Self::Error> {
         let f = |parser: &mut Self| {
             parser.ctx_mut().push_stack();
 
@@ -49,17 +52,21 @@ pub trait Parse {
         self.parse_roll_back(f)
     }
 
-    fn parse_n<T>(&mut self, f: impl Fn(&mut Self) -> Result<T, Self::Error>) -> Result<N<T>, Self::Error> {
-        let f = |parser: &mut Self | {
-            match f(parser)   {
-                Ok(d) => Ok(parser.ctx().make_node(d)),
-                Err(e) => Err(e)
-            }
+    fn parse_n<T>(
+        &mut self,
+        f: impl Fn(&mut Self) -> Result<T, Self::Error>,
+    ) -> Result<N<T>, Self::Error> {
+        let f = |parser: &mut Self| match f(parser) {
+            Ok(d) => Ok(parser.ctx().make_node(d)),
+            Err(e) => Err(e),
         };
         self.parse(f)
     }
 
-    fn parse_roll_back<T>(&mut self, f: impl Fn(&mut Self) -> Result<T, Self::Error>) -> Result<T, Self::Error> {
+    fn parse_roll_back<T>(
+        &mut self,
+        f: impl Fn(&mut Self) -> Result<T, Self::Error>,
+    ) -> Result<T, Self::Error> {
         let cursor = self.ctx().cursor;
         match f(self) {
             Ok(d) => Ok(d),
@@ -70,7 +77,10 @@ pub trait Parse {
         }
     }
 
-    fn parse_roll_back_opt<T>(&mut self, f: impl Fn(&mut Self) -> Result<Option<T>, Self::Error>) -> Result<Option<T>, Self::Error> {
+    fn parse_roll_back_opt<T>(
+        &mut self,
+        f: impl Fn(&mut Self) -> Result<Option<T>, Self::Error>,
+    ) -> Result<Option<T>, Self::Error> {
         let cursor = self.ctx().cursor;
         match f(self) {
             Ok(Some(d)) => Ok(Some(d)),
@@ -81,16 +91,25 @@ pub trait Parse {
         }
     }
 
-    fn parse_l1<T>(&mut self, tok: Self::Token, f: impl Fn(&mut Self) -> Result<T, Self::Error>) -> Result<Option<T>, Self::Error>
-        where Self::Token: Clone + Eq,
+    fn parse_l1<T>(
+        &mut self,
+        tok: Self::Token,
+        f: impl Fn(&mut Self) -> Result<T, Self::Error>,
+    ) -> Result<Option<T>, Self::Error>
+    where
+        Self::Token: Clone + Eq,
     {
         self.parse_l1_if(|t| t == &tok, f)
     }
 
-    fn parse_l1_if<T>(&mut self, cond: impl Fn(&Self::Token) -> bool, f: impl Fn(&mut Self) -> Result<T,Self::Error>) -> Result<Option<T>, Self::Error>
-    where Self::Token: Clone
+    fn parse_l1_if<T>(
+        &mut self,
+        cond: impl Fn(&Self::Token) -> bool,
+        f: impl Fn(&mut Self) -> Result<T, Self::Error>,
+    ) -> Result<Option<T>, Self::Error>
+    where
+        Self::Token: Clone,
     {
-
         let current = match self.peek() {
             Some(d) => d.tok,
             None => return Ok(None),
@@ -104,19 +123,22 @@ pub trait Parse {
     }
 
     fn advance(&mut self) -> Option<S<Self::Token>>
-    where Self::Token: Clone
+    where
+        Self::Token: Clone,
     {
         self.ctx_mut().advance()
     }
 
     fn peek(&self) -> Option<S<Self::Token>>
-        where Self::Token: Clone
+    where
+        Self::Token: Clone,
     {
         self.ctx().peek()
     }
 
     fn expect(&mut self, expected: Self::Token) -> Result<S<Self::Token>, Option<S<Self::Token>>>
-    where Self::Token: Eq + Clone,
+    where
+        Self::Token: Eq + Clone,
     {
         let ret = self.sat(expected)?;
         self.advance();
@@ -124,11 +146,12 @@ pub trait Parse {
     }
 
     fn sat(&self, expected: Self::Token) -> Result<S<Self::Token>, Option<S<Self::Token>>>
-        where Self::Token: Eq + Clone,
+    where
+        Self::Token: Eq + Clone,
     {
         let d = match self.peek() {
             Some(d) => d,
-            None => return Err(None)
+            None => return Err(None),
         };
         if d.tok == expected {
             Ok(d)
@@ -137,8 +160,12 @@ pub trait Parse {
         }
     }
 
-    fn expect_one_of(&mut self, expected: &[Self::Token]) -> Result<S<Self::Token>, Option<S<Self::Token>>>
-        where Self::Token: Eq + Clone,
+    fn expect_one_of(
+        &mut self,
+        expected: &[Self::Token],
+    ) -> Result<S<Self::Token>, Option<S<Self::Token>>>
+    where
+        Self::Token: Eq + Clone,
     {
         let ret = self.sat_one_of(expected)?;
         self.advance();
@@ -146,9 +173,9 @@ pub trait Parse {
     }
 
     fn sat_one_of(&self, expected: &[Self::Token]) -> Result<S<Self::Token>, Option<S<Self::Token>>>
-        where Self::Token: Eq + Clone,
-        {
-
+    where
+        Self::Token: Eq + Clone,
+    {
         let d = match self.peek() {
             Some(d) => d,
             None => return Err(None),
@@ -175,7 +202,7 @@ impl<T> ParseCtx<T> {
         let start = *self.call_stack.last().expect("not in parsing context");
         debug_assert!(start <= self.cursor);
         if start == self.cursor {
-            Span::new(start ,self.cursor)
+            Span::new(start, self.cursor)
         } else {
             let start = self.tokens[start].span;
             let end = self.tokens[self.cursor - 1].span;
@@ -194,7 +221,7 @@ impl<T> ParseCtx<T> {
     fn make_node<A>(&self, data: A) -> N<A> {
         let id = self.id_gen.next();
         let span = self.span();
-        N {id, span, data}
+        N { id, span, data }
     }
 
     pub fn chars(&self) -> &Chars {

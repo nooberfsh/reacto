@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 pub struct NodeId(pub(crate) usize);

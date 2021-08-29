@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use std::ops::Deref;
+use std::sync::Arc;
 
 #[derive(Clone, Debug)]
 pub struct Chars(Arc<Vec<char>>);

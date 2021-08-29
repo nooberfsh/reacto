@@ -41,14 +41,14 @@ mod tests {
 
     #[test]
     fn test_new() {
-        let _ = Span::new(0,0);
-        let _ = Span::new(0,1);
+        let _ = Span::new(0, 0);
+        let _ = Span::new(0, 1);
     }
 
     #[test]
     #[should_panic]
     fn test_new_panic() {
-        Span::new(1,0);
+        Span::new(1, 0);
     }
 
     #[test]

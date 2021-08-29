@@ -35,9 +35,7 @@ pub trait Lex {
     fn next_s(&mut self) -> Result<Option<S<Self::Token>>, Self::Error> {
         if let Some(tok) = self.next()? {
             let span = self.span();
-            let tok = S {
-                span, tok
-            };
+            let tok = S { span, tok };
             self.ctx_mut().sync();
             Ok(Some(tok))
         } else {

@@ -1,6 +1,6 @@
 use std::fmt;
-use std::ops::{Deref, DerefMut};
 use std::hash::{Hash, Hasher};
+use std::ops::{Deref, DerefMut};
 
 use crate::node_id::NodeId;
 use crate::span::Span;
