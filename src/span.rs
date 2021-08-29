@@ -4,6 +4,12 @@ pub struct Span {
     end: usize,
 }
 
+#[derive(Clone, Debug, Copy)]
+pub struct S<T> {
+    pub span: Span,
+    pub tok: T,
+}
+
 impl Span {
     pub fn new(start: usize, end: usize) -> Self {
         assert!(start <= end, "start must less then equal end");
