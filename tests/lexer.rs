@@ -1,5 +1,5 @@
+use reacto::lex::{Lex, LexCtx};
 use reacto::span::Span;
-use reacto::lex::{LexCtx, Lex};
 
 #[derive(Debug)]
 pub struct LexError {
@@ -43,7 +43,7 @@ impl Lex for Lexer {
             '"' => {
                 self.advance_while(|c| c != '"');
                 if !self.advance_cmp('"') {
-                    return Err("sting not closed".to_string())
+                    return Err("sting not closed".to_string());
                 }
                 Token::LitString
             }
@@ -51,7 +51,7 @@ impl Lex for Lexer {
                 self.advance_while(is_digit_letter);
                 Token::Ident
             }
-            _ => return Err("unknown char".to_string())
+            _ => return Err("unknown char".to_string()),
         };
         Ok(Some(ty))
     }
@@ -59,9 +59,8 @@ impl Lex for Lexer {
 
 pub fn new_lexer(s: &str) -> Lexer {
     let ctx = LexCtx::new(s);
-    Lexer {ctx}
+    Lexer { ctx }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // helper functions

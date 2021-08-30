@@ -25,7 +25,6 @@ impl<T> ParseCtx<T> {
     }
 }
 
-
 #[macro_export]
 macro_rules! parse_some {
     ($parser:expr, $f:ident, $sep:expr) => {{
@@ -36,7 +35,7 @@ macro_rules! parse_some {
             ret.push(d);
         }
         ret
-    }}
+    }};
 }
 
 #[macro_export]
@@ -197,8 +196,8 @@ pub trait Parse {
     }
 
     fn advance_cmp(&mut self, tok: Self::Token) -> bool
-        where
-            Self::Token: Clone + Eq,
+    where
+        Self::Token: Clone + Eq,
     {
         self.ctx_mut().advance_cmp(tok)
     }
@@ -347,6 +346,7 @@ impl<T: Clone> ParseCtx<T> {
         }
     }
 }
+
 impl<T: Clone + Eq> ParseCtx<T> {
     fn advance_cmp(&mut self, tok: T) -> bool {
         self.advance_if(|x| x == tok)
