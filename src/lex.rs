@@ -146,7 +146,166 @@ impl LexCtx {
         self.start = self.cursor
     }
 
-    pub fn chars(&self) -> &Chars {
+    fn chars(&self) -> &Chars {
         &self.chars
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[derive(Debug)]
+    pub struct LexError {
+        span: Span,
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct Lexer {
+        ctx: LexCtx,
+    }
+
+    #[derive(Clone, Debug, Copy, Eq, PartialEq)]
+    pub enum Token {
+        Plus,
+        Whitespace,
+        Ident,
+        LitString,
+    }
+
+    impl Lex for Lexer {
+        type Token = Token;
+        type Error = String;
+
+        fn ctx(&self) -> &LexCtx {
+            &self.ctx
+        }
+
+        fn ctx_mut(&mut self) -> &mut LexCtx {
+            &mut self.ctx
+        }
+
+        fn next(&mut self) -> Result<Option<Token>, String> {
+            let c = match self.advance() {
+                Some(d) => d,
+                None => return Ok(None),
+            };
+
+            let ty = match c {
+                '+' => Token::Plus,
+                ' ' => Token::Whitespace,
+                '"' => {
+                    self.advance_while(|c| c != '"');
+                    if !self.advance_cmp('"') {
+                        return Err("sting not closed".to_string())
+                    }
+                    Token::LitString
+                }
+                c if is_letter(c) => {
+                    self.advance_while(is_digit_letter);
+                    Token::Ident
+                }
+                _ => return Err("unknown char".to_string())
+            };
+            Ok(Some(ty))
+        }
+    }
+
+    fn new_lexer(s: &str) -> Lexer {
+        let ctx = LexCtx::new(s);
+        Lexer {ctx}
+    }
+
+    #[test]
+    fn test_move() {
+        let mut a = new_lexer("ab");
+        assert_eq!(a.eof(), false);
+        assert_eq!(a.peek().unwrap(), 'a');
+        assert_eq!(a.advance().unwrap(), 'a');
+        assert_eq!(a.peek().unwrap(), 'b');
+        assert_eq!(a.advance().unwrap(), 'b');
+        assert_eq!(a.eof(), true);
+        assert_eq!(a.peek(), None);
+        assert_eq!(a.advance(), None);
+    }
+
+    #[test]
+    fn test_advance_cmp() {
+        let mut a = new_lexer("ab");
+        assert_eq!(a.advance_cmp('b'), false);
+        assert_eq!(a.peek().unwrap(), 'a');
+
+        assert_eq!(a.advance_cmp('a'), true);
+        assert_eq!(a.peek().unwrap(), 'b');
+
+        assert_eq!(a.advance_cmp('b'), true);
+        assert_eq!(a.peek(), None);
+
+        assert_eq!(a.advance_cmp('b'), false);
+        assert_eq!(a.peek(), None);
+    }
+
+    #[test]
+    fn test_advance_if() {
+        let mut a = new_lexer("ab");
+        assert_eq!(a.advance_if(|c| c == 'b'), false);
+        assert_eq!(a.peek().unwrap(), 'a');
+
+        assert_eq!(a.advance_if(|c| c == 'a'), true);
+        assert_eq!(a.peek().unwrap(), 'b');
+
+        assert_eq!(a.advance_if(|c| c == 'b'), true);
+        assert_eq!(a.peek(), None);
+
+        assert_eq!(a.advance_if(|c| c == 'b'), false);
+        assert_eq!(a.peek(), None);
+    }
+
+    #[test]
+    fn test_advance_while() {
+        let mut a = new_lexer("123ab");
+        assert_eq!(a.advance_while(|c| is_digit(c)), 3);
+        assert_eq!(a.advance_while(|c| is_letter(c)), 2);
+        assert_eq!(a.advance_while(|c| is_letter(c)), 0);
+    }
+
+    #[test]
+    fn test_span() {
+        let mut a = new_lexer("+ ab");
+        assert_eq!(Span::new(0,0), a.span());
+        let res = a.next_s().unwrap().unwrap();
+        assert_eq!(res.span, Span::new(0, 1));
+        assert_eq!(res.tok, Token::Plus);
+
+        let res = a.next_s().unwrap().unwrap();
+        assert_eq!(res.span, Span::new(1, 2));
+        assert_eq!(res.tok, Token::Whitespace);
+
+        let res = a.next_s().unwrap().unwrap();
+        assert_eq!(res.span, Span::new(2, 4));
+        assert_eq!(res.tok, Token::Ident);
+
+        let res = a.next_s().unwrap();
+        assert!(res.is_none());
+    }
+
+    #[test]
+    fn test_chars() {
+        let a = new_lexer("+ ab");
+        assert_eq!(a.chars(), "+ ab")
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // helper functions
+    fn is_digit(c: char) -> bool {
+        c >= '0' && c <= '9'
+    }
+
+    fn is_letter(c: char) -> bool {
+        (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c == '_')
+    }
+
+    fn is_digit_letter(c: char) -> bool {
+        is_digit(c) || is_letter(c)
     }
 }
