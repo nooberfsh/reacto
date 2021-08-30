@@ -3,7 +3,7 @@ mod lex_parse;
 use reacto::parse::Parse;
 use lex_parse::parser::*;
 use lex_parse::lexer::*;
-use reacto::span::Span;
+use reacto::span::{Span, S};
 
 #[test]
 fn test_move() {
@@ -205,4 +205,28 @@ fn test_chars() {
 
 #[test]
 fn test_parse_roll_back() {
+    let mut a = new_parser("a+");
+    let res = a.parse_roll_back(|p| p.expect(Token::Ident)).unwrap();
+    assert_eq!(res.tok, Token::Ident);
+    assert_eq!(a.span(), Span::new(1,1));
+
+    let res = a.parse_roll_back(|p| p.expect(Token::Ident));
+    assert!(res.is_err());
+    assert_eq!(a.span(), Span::new(1,1));
+}
+
+#[test]
+fn test_parse_roll_back_opt() {
+    let mut a = new_parser("a+");
+    let res = a.parse_roll_back_opt(|p| p.expect(Token::Ident).map(Some)).unwrap().unwrap();
+    assert_eq!(res.tok, Token::Ident);
+    assert_eq!(a.span(), Span::new(1,1));
+
+    let res = a.parse_roll_back_opt(|p| p.expect(Token::Whitespace).map(Some));
+    assert!(res.is_err());
+    assert_eq!(a.span(), Span::new(1,1));
+
+    let res : Option<S<Token>> =  a.parse_roll_back_opt(|p| p.expect(Token::Plus).map(|_| None)).unwrap();
+    assert!(res.is_none());
+    assert_eq!(a.span(), Span::new(1,1));
 }
