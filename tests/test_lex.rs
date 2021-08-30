@@ -1,6 +1,6 @@
-mod lexer;
+mod lex_parse;
 
-use lexer::*;
+use lex_parse::lexer::*;
 use reacto::lex::Lex;
 use reacto::span::Span;
 
