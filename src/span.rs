@@ -52,6 +52,22 @@ mod tests {
     }
 
     #[test]
+    fn test_start_end() {
+        let a = Span::new(1, 2);
+        assert_eq!(a.start(), 1);
+        assert_eq!(a.end(), 2);
+    }
+
+    #[test]
+    fn test_len() {
+        let a = Span::new(1, 2);
+        assert_eq!(a.len(), 1);
+
+        let a = Span::new(1, 1);
+        assert_eq!(a.len(), 0);
+    }
+
+    #[test]
     fn test_merge() {
         let a = Span::new(1, 3);
         let res = a.merge(a);
