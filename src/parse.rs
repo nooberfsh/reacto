@@ -101,7 +101,7 @@ pub trait Parse {
     ) -> Self::Error;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    // provided
+    // parsing
 
     fn parse<T>(
         &mut self,
@@ -188,6 +188,9 @@ pub trait Parse {
         }
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // movement
+
     fn advance(&mut self) -> Option<S<Self::Token>>
     where
         Self::Token: Clone,
@@ -209,9 +212,12 @@ pub trait Parse {
         self.ctx().peek()
     }
 
-    fn get_string(&self, span: Span) -> String {
-        self.ctx().get_string(span)
+    fn eof(&self) -> bool {
+        self.ctx().eof()
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // expect
 
     fn expect(&mut self, expected: Self::Token) -> Result<S<Self::Token>, Self::Error>
     where
@@ -262,6 +268,9 @@ pub trait Parse {
         }
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // meta
+
     fn span(&self) -> Span {
         self.ctx().span()
     }
@@ -270,8 +279,8 @@ pub trait Parse {
         self.ctx().make_node(data)
     }
 
-    fn eof(&self) -> bool {
-        self.ctx().eof()
+    fn get_string(&self, span: Span) -> String {
+        self.ctx().get_string(span)
     }
 }
 
