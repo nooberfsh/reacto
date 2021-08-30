@@ -279,14 +279,18 @@ pub trait Parse {
         self.ctx().make_node(data)
     }
 
-    fn get_string(&self, span: Span) -> String {
+    fn get_string(&self, span: Span) -> Option<String> {
         self.ctx().get_string(span)
+    }
+
+    fn chars(&self) -> &Chars {
+        self.ctx().chars()
     }
 }
 
 impl<T> ParseCtx<T> {
     fn span(&self) -> Span {
-        let start = *self.call_stack.last().expect("not in parsing context");
+        let start = *self.call_stack.last().unwrap_or(&self.cursor);
         debug_assert!(start <= self.cursor);
         if start == self.cursor {
             Span::new(start, self.cursor)
@@ -311,17 +315,21 @@ impl<T> ParseCtx<T> {
         N { id, span, data }
     }
 
-    pub fn chars(&self) -> &Chars {
+    fn chars(&self) -> &Chars {
         &self.chars
     }
 
-    pub fn eof(&self) -> bool {
+    fn eof(&self) -> bool {
         self.cursor == self.tokens.len()
     }
 
-    fn get_string(&self, span: Span) -> String {
-        let s = &self.chars[span.start()..span.end()];
-        s.iter().collect()
+    fn get_string(&self, span: Span) -> Option<String> {
+        if span.end() > self.chars.len() {
+            None
+        } else {
+            let s = &self.chars[span.start()..span.end()];
+            Some(s.iter().collect())
+        }
     }
 }
 
