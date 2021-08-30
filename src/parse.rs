@@ -25,6 +25,67 @@ impl<T> ParseCtx<T> {
     }
 }
 
+
+#[macro_export]
+macro_rules! parse_some {
+    ($parser:expr, $f:ident, $sep:expr) => {{
+        let head = $parser.$f()?;
+        let mut ret = vec![head];
+        while $parser.advance_cmp($sep) {
+            let d = $parser.$f()?;
+            ret.push(d);
+        }
+        ret
+    }}
+}
+
+#[macro_export]
+macro_rules! parse_some_l1 {
+    ($parser:expr, $f:ident, $l:expr) => {{
+        let head = $parser.$f()?;
+        let mut ret = vec![head];
+        while $parser.sat($l).is_ok() {
+            let d = $parser.$f()?;
+            ret.push(d);
+        }
+        ret
+    }};
+}
+
+#[macro_export]
+macro_rules! expect_one_of {
+    ($parser:expr, $($l:path => $r:expr),*) => {{
+        let d = $parser.expect_one_of(&[$($l),*])?;
+        match d.tok {
+            $($l => $r,)*
+            _ => unreachable!(),
+        }
+    }}
+}
+
+#[macro_export]
+macro_rules! sat_one_of {
+    ($parser:expr, $($l:path => $r:expr),*) => {{
+        let d = $parser.sat_one_of(&[$($l),*])?;
+        match d.tok {
+            $($l => $r,)*
+            _ => unreachable!(),
+        }
+    }}
+}
+
+#[macro_export]
+macro_rules! parse_many_l1 {
+    ($parser:expr, $f:ident, $l:expr) => {{
+        let mut ret = vec![];
+        while $parser.sat($l).is_ok() {
+            let d = $parser.$f()?;
+            ret.push(d);
+        }
+        ret
+    }};
+}
+
 pub trait Parse {
     type Error;
     type Token;
@@ -33,6 +94,12 @@ pub trait Parse {
 
     fn ctx(&self) -> &ParseCtx<Self::Token>;
     fn ctx_mut(&mut self) -> &mut ParseCtx<Self::Token>;
+    fn expect_err(&self, expected: Self::Token, found: Option<S<Self::Token>>) -> Self::Error;
+    fn expect_one_of_err(
+        &self,
+        expected: &[Self::Token],
+        found: Option<S<Self::Token>>,
+    ) -> Self::Error;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // provided
@@ -129,6 +196,13 @@ pub trait Parse {
         self.ctx_mut().advance()
     }
 
+    fn advance_cmp(&mut self, tok: Self::Token) -> bool
+        where
+            Self::Token: Clone + Eq,
+    {
+        self.ctx_mut().advance_cmp(tok)
+    }
+
     fn peek(&self) -> Option<S<Self::Token>>
     where
         Self::Token: Clone,
@@ -136,7 +210,11 @@ pub trait Parse {
         self.ctx().peek()
     }
 
-    fn expect(&mut self, expected: Self::Token) -> Result<S<Self::Token>, Option<S<Self::Token>>>
+    fn get_string(&self, span: Span) -> String {
+        self.ctx().get_string(span)
+    }
+
+    fn expect(&mut self, expected: Self::Token) -> Result<S<Self::Token>, Self::Error>
     where
         Self::Token: Eq + Clone,
     {
@@ -145,25 +223,22 @@ pub trait Parse {
         Ok(ret)
     }
 
-    fn sat(&self, expected: Self::Token) -> Result<S<Self::Token>, Option<S<Self::Token>>>
+    fn sat(&self, expected: Self::Token) -> Result<S<Self::Token>, Self::Error>
     where
         Self::Token: Eq + Clone,
     {
         let d = match self.peek() {
             Some(d) => d,
-            None => return Err(None),
+            None => return Err(self.expect_err(expected, None)),
         };
         if d.tok == expected {
             Ok(d)
         } else {
-            Err(Some(d))
+            Err(self.expect_err(expected, Some(d)))
         }
     }
 
-    fn expect_one_of(
-        &mut self,
-        expected: &[Self::Token],
-    ) -> Result<S<Self::Token>, Option<S<Self::Token>>>
+    fn expect_one_of(&mut self, expected: &[Self::Token]) -> Result<S<Self::Token>, Self::Error>
     where
         Self::Token: Eq + Clone,
     {
@@ -172,24 +247,28 @@ pub trait Parse {
         Ok(ret)
     }
 
-    fn sat_one_of(&self, expected: &[Self::Token]) -> Result<S<Self::Token>, Option<S<Self::Token>>>
+    fn sat_one_of(&self, expected: &[Self::Token]) -> Result<S<Self::Token>, Self::Error>
     where
         Self::Token: Eq + Clone,
     {
         let d = match self.peek() {
             Some(d) => d,
-            None => return Err(None),
+            None => return Err(self.expect_one_of_err(expected, None)),
         };
 
         if expected.iter().find(|e| *e == &d.tok).is_some() {
             Ok(d)
         } else {
-            Err(Some(d))
+            Err(self.expect_one_of_err(expected, Some(d)))
         }
     }
 
     fn span(&self) -> Span {
         self.ctx().span()
+    }
+
+    fn make_node<A>(&self, data: A) -> N<A> {
+        self.ctx().make_node(data)
     }
 
     fn eof(&self) -> bool {
@@ -231,9 +310,24 @@ impl<T> ParseCtx<T> {
     pub fn eof(&self) -> bool {
         self.cursor == self.tokens.len()
     }
+
+    fn get_string(&self, span: Span) -> String {
+        let s = &self.chars[span.start()..span.end()];
+        s.iter().collect()
+    }
 }
 
 impl<T: Clone> ParseCtx<T> {
+    fn advance_if(&mut self, p: impl Fn(T) -> bool) -> bool {
+        if let Some(c) = self.peek() {
+            if p(c.tok) {
+                self.cursor += 1;
+                return true;
+            }
+        }
+        false
+    }
+
     fn advance(&mut self) -> Option<S<T>> {
         if self.eof() {
             None
@@ -251,5 +345,10 @@ impl<T: Clone> ParseCtx<T> {
             let c = self.tokens[self.cursor].clone();
             Some(c)
         }
+    }
+}
+impl<T: Clone + Eq> ParseCtx<T> {
+    fn advance_cmp(&mut self, tok: T) -> bool {
+        self.advance_if(|x| x == tok)
     }
 }
