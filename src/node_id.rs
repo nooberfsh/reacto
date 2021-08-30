@@ -21,3 +21,19 @@ impl IdGen {
         NodeId(id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new() {
+        let gen = IdGen::new();
+        let a = gen.next();
+        assert_eq!(a.0, 0);
+        let a = gen.next();
+        assert_eq!(a.0, 1);
+        let a = gen.next();
+        assert_eq!(a.0, 2);
+    }
+}
