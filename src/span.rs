@@ -12,7 +12,7 @@ pub struct S<T> {
 
 impl Span {
     pub fn new(start: usize, end: usize) -> Self {
-        assert!(start <= end, "start must less then equal end");
+        assert!(start < end, "start must less then end");
         Span { start, end }
     }
 
@@ -41,14 +41,19 @@ mod tests {
 
     #[test]
     fn test_new() {
-        let _ = Span::new(0, 0);
-        let _ = Span::new(0, 1);
+        Span::new(0, 1);
     }
 
     #[test]
     #[should_panic]
     fn test_new_panic() {
         Span::new(1, 0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_new_panic2() {
+        Span::new(1, 1);
     }
 
     #[test]
@@ -62,9 +67,6 @@ mod tests {
     fn test_len() {
         let a = Span::new(1, 2);
         assert_eq!(a.len(), 1);
-
-        let a = Span::new(1, 1);
-        assert_eq!(a.len(), 0);
     }
 
     #[test]

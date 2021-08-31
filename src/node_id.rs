@@ -4,6 +4,12 @@ use std::sync::Arc;
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 pub struct NodeId(pub(crate) usize);
 
+impl NodeId {
+    pub fn get(&self) -> usize {
+        self.0
+    }
+}
+
 #[derive(Clone, Debug)]
 pub(crate) struct IdGen {
     id: Arc<AtomicUsize>,

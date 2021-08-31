@@ -271,7 +271,7 @@ pub trait Parse {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // meta
 
-    fn span(&self) -> Span {
+    fn span(&self) -> Option<Span> {
         self.ctx().span()
     }
 
@@ -286,18 +286,23 @@ pub trait Parse {
     fn chars(&self) -> &Chars {
         self.ctx().chars()
     }
+
+    // only for test
+    fn cursor(&self) -> usize {
+        self.ctx().cursor
+    }
 }
 
 impl<T> ParseCtx<T> {
-    fn span(&self) -> Span {
-        let start = *self.call_stack.last().unwrap_or(&self.cursor);
+    fn span(&self) -> Option<Span> {
+        let start = *self.call_stack.last()?;
         debug_assert!(start <= self.cursor);
         if start == self.cursor {
-            Span::new(start, self.cursor)
+            None
         } else {
             let start = self.tokens[start].span;
             let end = self.tokens[self.cursor - 1].span;
-            start.merge(end)
+            Some(start.merge(end))
         }
     }
 
@@ -311,7 +316,7 @@ impl<T> ParseCtx<T> {
 
     fn make_node<A>(&self, data: A) -> N<A> {
         let id = self.id_gen.next();
-        let span = self.span();
+        let span = self.span().expect("not in parsing context");
         N { id, span, data }
     }
 

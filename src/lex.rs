@@ -34,7 +34,7 @@ pub trait Lex {
 
     fn next_s(&mut self) -> Result<Option<S<Self::Token>>, Self::Error> {
         if let Some(tok) = self.next()? {
-            let span = self.span();
+            let span = self.span().unwrap();
             let tok = S { span, tok };
             self.ctx_mut().sync();
             Ok(Some(tok))
@@ -78,7 +78,7 @@ pub trait Lex {
         self.ctx_mut().advance_while(p)
     }
 
-    fn span(&self) -> Span {
+    fn span(&self) -> Option<Span> {
         self.ctx().span()
     }
 
@@ -136,10 +136,14 @@ impl LexCtx {
         num
     }
 
-    fn span(&self) -> Span {
+    fn span(&self) -> Option<Span> {
         let start = self.start;
         let end = self.cursor;
-        Span::new(start, end)
+        if start == end {
+            None
+        } else {
+            Some(Span::new(start, end))
+        }
     }
 
     fn sync(&mut self) {

@@ -1,5 +1,5 @@
-use reacto::parse::{ParseCtx, Parse};
 use reacto::lex::Lex;
+use reacto::parse::{Parse, ParseCtx};
 use reacto::span::S;
 
 use super::lexer::*;
@@ -20,11 +20,11 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new(mut lexer: Lexer) -> Self  {
+    pub fn new(mut lexer: Lexer) -> Self {
         let tokens = lexer.tokens().unwrap();
         let chars = lexer.chars();
         let ctx = ParseCtx::new(chars.clone(), tokens);
-        Parser {ctx}
+        Parser { ctx }
     }
 }
 
@@ -49,7 +49,7 @@ impl Parse for Parser {
         expected: &[Self::Token],
         found: Option<S<Self::Token>>,
     ) -> Self::Error {
-        let expected = expected.iter().map(|t|t.clone()).collect();
+        let expected = expected.iter().map(|t| t.clone()).collect();
         ParseError::ExpectMulti(expected, found)
     }
 }

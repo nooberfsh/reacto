@@ -60,7 +60,7 @@ fn test_advance_while() {
 #[test]
 fn test_span() {
     let mut a = new_lexer("+ ab");
-    assert_eq!(Span::new(0, 0), a.span());
+    assert_eq!(a.span(), None);
     let res = a.next_s().unwrap().unwrap();
     assert_eq!(res.span, Span::new(0, 1));
     assert_eq!(res.tok, Token::Plus);
