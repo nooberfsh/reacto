@@ -1,6 +1,8 @@
 use std::ops::Deref;
 use std::sync::Arc;
 
+use crate::span::Span;
+
 #[derive(Clone, Debug)]
 pub struct Chars(Arc<Vec<char>>);
 
@@ -8,6 +10,15 @@ impl Chars {
     pub fn new(s: &str) -> Self {
         let chars: Vec<_> = s.chars().collect();
         Chars(Arc::new(chars))
+    }
+
+    pub fn get_string(&self, span: Span) -> Option<String> {
+        if span.end() > self.len() {
+            None
+        } else {
+            let s = &self.0[span.start()..span.end()];
+            Some(s.iter().collect())
+        }
     }
 }
 
@@ -57,5 +68,14 @@ mod tests {
         assert_eq!(a, "123");
         assert_eq!(a, *"123");
         assert_eq!(a, "123".to_string());
+    }
+
+    #[test]
+    fn test_get_string() {
+        let a = Chars::new("a+");
+        assert_eq!(a.get_string(Span::new(0, 1)).unwrap(), "a");
+        assert_eq!(a.get_string(Span::new(0, 2)).unwrap(), "a+");
+        assert_eq!(a.get_string(Span::new(0, 3)), None);
+        assert_eq!(a.get_string(Span::new(2, 3)), None);
     }
 }

@@ -193,15 +193,6 @@ fn test_span() {
 }
 
 #[test]
-fn test_get_string() {
-    let a = new_parser("a+");
-    assert_eq!(a.get_string(Span::new(0, 1)).unwrap(), "a");
-    assert_eq!(a.get_string(Span::new(0, 2)).unwrap(), "a+");
-    assert_eq!(a.get_string(Span::new(0, 3)), None);
-    assert_eq!(a.get_string(Span::new(2, 3)), None);
-}
-
-#[test]
 fn test_chars() {
     let a = new_parser("+ ab");
     assert_eq!(a.chars(), "+ ab")

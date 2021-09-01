@@ -98,6 +98,11 @@ pub trait Lex {
         self.ctx().span()
     }
 
+    fn get_string(&self) -> Option<String> {
+        let span = self.span()?;
+        self.chars().get_string(span)
+    }
+
     fn chars(&self) -> &Chars {
         self.ctx().chars()
     }

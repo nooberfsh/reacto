@@ -279,8 +279,9 @@ pub trait Parse {
         self.ctx().make_node(data)
     }
 
-    fn get_string(&self, span: Span) -> Option<String> {
-        self.ctx().get_string(span)
+    fn get_string(&self) -> Option<String> {
+        let span = self.span()?;
+        self.chars().get_string(span)
     }
 
     fn chars(&self) -> &Chars {
@@ -326,15 +327,6 @@ impl<T> ParseCtx<T> {
 
     fn eof(&self) -> bool {
         self.cursor == self.tokens.len()
-    }
-
-    fn get_string(&self, span: Span) -> Option<String> {
-        if span.end() > self.chars.len() {
-            None
-        } else {
-            let s = &self.chars[span.start()..span.end()];
-            Some(s.iter().collect())
-        }
     }
 }
 
