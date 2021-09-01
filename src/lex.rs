@@ -62,12 +62,20 @@ pub trait Lex {
         self.ctx().peek()
     }
 
+    fn peek2(&self) -> (Option<char>, Option<char>) {
+        self.ctx().peek2()
+    }
+
     fn advance(&mut self) -> Option<char> {
         self.ctx_mut().advance()
     }
 
     fn advance_cmp(&mut self, c: char) -> bool {
         self.ctx_mut().advance_cmp(c)
+    }
+
+    fn advance_cmp2(&mut self, c1: char, c2: char) -> bool {
+        self.ctx_mut().advance_cmp2(c1, c2)
     }
 
     fn advance_if(&mut self, p: impl Fn(char) -> bool) -> bool {
@@ -100,6 +108,16 @@ impl LexCtx {
         }
     }
 
+    fn peek2(&self) -> (Option<char>, Option<char>) {
+        let a = self.peek();
+        let b = if self.cursor < self.chars.len() - 1 {
+            Some(self.chars[self.cursor + 1])
+        } else {
+            None
+        };
+        (a, b)
+    }
+
     fn advance(&mut self) -> Option<char> {
         if self.eof() {
             None
@@ -112,6 +130,17 @@ impl LexCtx {
 
     fn advance_cmp(&mut self, c: char) -> bool {
         self.advance_if(|x| x == c)
+    }
+
+    fn advance_cmp2(&mut self, c1: char, c2: char) -> bool {
+        let (a1, a2) = self.peek2();
+        if a1 == Some(c1) && a2 == Some(c2) {
+            self.advance();
+            self.advance();
+            true
+        } else {
+            false
+        }
     }
 
     fn advance_if(&mut self, p: impl Fn(char) -> bool) -> bool {

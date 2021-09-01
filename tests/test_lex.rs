@@ -34,6 +34,37 @@ fn test_advance_cmp() {
 }
 
 #[test]
+fn test_advance_cmp2() {
+    let mut a = new_lexer("abc");
+    assert_eq!(a.advance_cmp2('b', 'c'), false);
+    assert_eq!(a.peek().unwrap(), 'a');
+
+    assert_eq!(a.advance_cmp2('a', 'b'), true);
+    assert_eq!(a.peek().unwrap(), 'c');
+
+    assert_eq!(a.advance_cmp2('b', 'c'), false);
+    assert_eq!(a.peek().unwrap(), 'c');
+}
+
+#[test]
+fn test_peek2() {
+    let mut a = new_lexer("ab");
+    let (c1, c2) = a.peek2();
+    assert_eq!(c1, Some('a'));
+    assert_eq!(c2, Some('b'));
+
+    a.advance();
+    let (c1, c2) = a.peek2();
+    assert_eq!(c1, Some('b'));
+    assert_eq!(c2, None);
+
+    a.advance();
+    let (c1, c2) = a.peek2();
+    assert_eq!(c1, None);
+    assert_eq!(c2, None);
+}
+
+#[test]
 fn test_advance_if() {
     let mut a = new_lexer("ab");
     assert_eq!(a.advance_if(|c| c == 'b'), false);
