@@ -245,14 +245,43 @@ fn test_parse_l1() {
         .parse_l1(Token::Ident, |p| p.expect(Token::Ident))
         .unwrap();
     assert!(res.is_none());
+    assert_eq!(a.cursor(), 1);
 
     // error
     let res = a.parse_l1(Token::Plus, |p| p.expect(Token::Ident));
     assert!(res.is_err());
+    assert_eq!(a.cursor(), 1);
 
     // eof
     a.advance();
     let res = a.parse_l1(Token::Plus, |p| p.expect(Token::Ident)).unwrap();
+    assert!(res.is_none());
+}
+
+#[test]
+fn test_parse_l1_adv() {
+    let mut a = new_parser("a+a");
+    let res = a
+        .parse_l1_adv(Token::Ident, |p| p.expect(Token::Plus))
+        .unwrap()
+        .unwrap();
+    assert_eq!(res.tok, Token::Plus);
+    assert_eq!(a.cursor(), 2);
+
+    let res = a
+        .parse_l1_adv(Token::Plus, |p| p.expect(Token::Ident))
+        .unwrap();
+    assert!(res.is_none());
+    assert_eq!(a.cursor(), 2);
+
+    // error
+    let res = a.parse_l1_adv(Token::Ident, |p| p.expect(Token::Ident));
+    assert!(res.is_err());
+    assert_eq!(a.cursor(), 2);
+
+    // eof
+    a.advance();
+    let res = a.parse_l1_adv(Token::Plus, |p| p.expect(Token::Ident)).unwrap();
     assert!(res.is_none());
 }
 
@@ -270,10 +299,12 @@ fn test_parse_l1_if() {
         .parse_l1_if(|tok| tok == &Token::Ident, |p| p.expect(Token::Ident))
         .unwrap();
     assert!(res.is_none());
+    assert_eq!(a.cursor(), 1);
 
     // error
     let res = a.parse_l1_if(|tok| tok == &Token::Plus, |p| p.expect(Token::Ident));
     assert!(res.is_err());
+    assert_eq!(a.cursor(), 1);
 
     // eof
     a.advance();
