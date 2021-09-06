@@ -259,6 +259,31 @@ fn test_parse_l1() {
 }
 
 #[test]
+fn test_parse_l1_not() {
+    let mut a = new_parser("a+");
+    let res = a
+        .parse_l1_not(Token::Plus, |p| p.expect(Token::Ident))
+        .unwrap()
+        .unwrap();
+    assert_eq!(res.tok, Token::Ident);
+    assert_eq!(a.cursor(), 1);
+
+    let res = a
+        .parse_l1_not(Token::Plus, |p| p.expect(Token::Plus))
+        .unwrap();
+    assert!(res.is_none());
+
+    // error
+    let res = a.parse_l1_not(Token::Ident, |p| p.expect(Token::Ident));
+    assert!(res.is_err());
+
+    // eof
+    a.advance();
+    let res = a.parse_l1_not(Token::Ident, |p| p.expect(Token::Ident)).unwrap();
+    assert!(res.is_none());
+}
+
+#[test]
 fn test_parse_l1_adv() {
     let mut a = new_parser("a+a");
     let res = a

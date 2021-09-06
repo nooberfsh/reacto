@@ -168,6 +168,17 @@ pub trait Parse {
         self.parse_l1_if(|t| t == &tok, f)
     }
 
+    fn parse_l1_not<T>(
+        &mut self,
+        tok: Self::Token,
+        f: impl Fn(&mut Self) -> Result<T, Self::Error>,
+    ) -> Result<Option<T>, Self::Error>
+    where
+        Self::Token: Clone + Eq,
+    {
+        self.parse_l1_if(|t| t != &tok, f)
+    }
+
     fn parse_l1_adv<T>(
         &mut self,
         tok: Self::Token,
