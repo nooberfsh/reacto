@@ -26,6 +26,11 @@ impl Parser {
         let ctx = ParseCtx::new(chars.clone(), tokens);
         Parser { ctx }
     }
+
+    pub fn parse_ident(&mut self) -> Result<(), ParseError> {
+        self.expect(Token::Ident)?;
+        Ok(())
+    }
 }
 
 impl Parse for Parser {

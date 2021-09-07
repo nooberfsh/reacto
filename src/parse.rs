@@ -85,6 +85,28 @@ macro_rules! parse_many_l1 {
     }};
 }
 
+#[macro_export]
+macro_rules! parse_many_to {
+    ($parser:expr, $f:ident, $sep:expr, $term:expr) => {{
+        if $parser.sat($term).is_ok() {
+            vec![]
+        } else {
+            let ret = parse_some!($parser, $f, $sep);
+            $parser.sat($term)?;
+            ret
+        }
+    }};
+}
+
+#[macro_export]
+macro_rules! parse_many_after {
+    ($parser:expr, $f:ident, $sep:expr, $term:expr) => {{
+        let ret = parse_many_to!($parser, $f, $sep, $term);
+        $parser.advance();
+        ret
+    }};
+}
+
 pub trait Parse {
     type Error;
     type Token;

@@ -2,6 +2,7 @@ mod lex_parse;
 
 use lex_parse::lexer::*;
 use lex_parse::parser::*;
+use reacto::*;
 use reacto::parse::Parse;
 use reacto::span::{Span, S};
 
@@ -369,4 +370,61 @@ fn test_parse_n() {
 
     let res = a.parse_n(|p| p.expect(Token::Ident));
     assert!(res.is_err());
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// macro tests
+
+#[test]
+fn test_parse_many_to() {
+    let mut a = new_parser("a b c+");
+    let mut f = || -> Result<Vec<()>, ParseError> {
+        let d = parse_many_to!(&mut a, parse_ident, Token::Whitespace, Token::Plus);
+        Ok(d)
+    };
+    assert_eq!(f().unwrap(), vec![(), (), ()]);
+    assert!(a.sat(Token::Plus).is_ok());
+
+    let mut a = new_parser("+");
+    let mut f = || -> Result<Vec<()>, ParseError> {
+        let d = parse_many_to!(&mut a, parse_ident, Token::Whitespace, Token::Plus);
+        Ok(d)
+    };
+    assert_eq!(f().unwrap(), vec![]);
+    assert!(a.sat(Token::Plus).is_ok());
+
+    let mut a = new_parser("a");
+    let mut f = || -> Result<Vec<()>, ParseError> {
+        let d = parse_many_to!(&mut a, parse_ident, Token::Whitespace, Token::Plus);
+        Ok(d)
+    };
+    assert!(f().is_err());
+    assert!(a.eof());
+}
+
+#[test]
+fn test_parse_many_after() {
+    let mut a = new_parser("a b c+a");
+    let mut f = || -> Result<Vec<()>, ParseError> {
+        let d = parse_many_after!(&mut a, parse_ident, Token::Whitespace, Token::Plus);
+        Ok(d)
+    };
+    assert_eq!(f().unwrap(), vec![(), (), ()]);
+    assert!(a.sat(Token::Ident).is_ok());
+
+    let mut a = new_parser("+a");
+    let mut f = || -> Result<Vec<()>, ParseError> {
+        let d = parse_many_after!(&mut a, parse_ident, Token::Whitespace, Token::Plus);
+        Ok(d)
+    };
+    assert_eq!(f().unwrap(), vec![]);
+    assert!(a.sat(Token::Ident).is_ok());
+
+    let mut a = new_parser("a");
+    let mut f = || -> Result<Vec<()>, ParseError> {
+        let d = parse_many_after!(&mut a, parse_ident, Token::Whitespace, Token::Plus);
+        Ok(d)
+    };
+    assert!(f().is_err());
+    assert!(a.eof());
 }
