@@ -96,12 +96,27 @@ macro_rules! parse_many_to {
             ret
         }
     }};
+
+    ($parser:expr, $f:ident, $term:expr) => {{
+        let mut ret = vec![];
+        while $parser.sat($term).is_err()  {
+            let d = $parser.$f()?;
+            ret.push(d);
+        }
+        ret
+    }};
 }
 
 #[macro_export]
 macro_rules! parse_many_after {
     ($parser:expr, $f:ident, $sep:expr, $term:expr) => {{
         let ret = parse_many_to!($parser, $f, $sep, $term);
+        $parser.advance();
+        ret
+    }};
+
+    ($parser:expr, $f:ident, $term:expr) => {{
+        let ret = parse_many_to!($parser, $f, $term);
         $parser.advance();
         ret
     }};

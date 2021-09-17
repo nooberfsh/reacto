@@ -9,6 +9,11 @@ pub fn new_parser(s: &str) -> Parser {
     Parser::new(lexer)
 }
 
+pub fn new_parser_wo_sp(s: &str) -> Parser {
+    let lexer = new_lexer(s);
+    Parser::new_wo_sp(lexer)
+}
+
 #[derive(Clone, Debug)]
 pub enum ParseError {
     Expect(Token, Option<S<Token>>),
@@ -22,6 +27,13 @@ pub struct Parser {
 impl Parser {
     pub fn new(mut lexer: Lexer) -> Self {
         let tokens = lexer.tokens().unwrap();
+        let chars = lexer.chars();
+        let ctx = ParseCtx::new(chars.clone(), tokens);
+        Parser { ctx }
+    }
+
+    pub fn new_wo_sp(mut lexer: Lexer) -> Self {
+        let tokens = lexer.tokens().unwrap().into_iter().filter(|tok| tok.tok != Token::Whitespace).collect();
         let chars = lexer.chars();
         let ctx = ParseCtx::new(chars.clone(), tokens);
         Parser { ctx }

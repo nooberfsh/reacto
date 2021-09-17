@@ -403,6 +403,33 @@ fn test_parse_many_to() {
 }
 
 #[test]
+fn test_parse_many_to_wo_sep() {
+    let mut a = new_parser_wo_sp("a b c+");
+    let mut f = || -> Result<Vec<()>, ParseError> {
+        let d = parse_many_to!(&mut a, parse_ident, Token::Plus);
+        Ok(d)
+    };
+    assert_eq!(f().unwrap(), vec![(), (), ()]);
+    assert!(a.sat(Token::Plus).is_ok());
+
+    let mut a = new_parser_wo_sp("+");
+    let mut f = || -> Result<Vec<()>, ParseError> {
+        let d = parse_many_to!(&mut a, parse_ident, Token::Plus);
+        Ok(d)
+    };
+    assert_eq!(f().unwrap(), vec![]);
+    assert!(a.sat(Token::Plus).is_ok());
+
+    let mut a = new_parser_wo_sp("a");
+    let mut f = || -> Result<Vec<()>, ParseError> {
+        let d = parse_many_to!(&mut a, parse_ident, Token::Plus);
+        Ok(d)
+    };
+    assert!(f().is_err());
+    assert!(a.eof());
+}
+
+#[test]
 fn test_parse_many_after() {
     let mut a = new_parser("a b c+a");
     let mut f = || -> Result<Vec<()>, ParseError> {
@@ -423,6 +450,33 @@ fn test_parse_many_after() {
     let mut a = new_parser("a");
     let mut f = || -> Result<Vec<()>, ParseError> {
         let d = parse_many_after!(&mut a, parse_ident, Token::Whitespace, Token::Plus);
+        Ok(d)
+    };
+    assert!(f().is_err());
+    assert!(a.eof());
+}
+
+#[test]
+fn test_parse_many_after_wo_ws() {
+    let mut a = new_parser_wo_sp("a b c+a");
+    let mut f = || -> Result<Vec<()>, ParseError> {
+        let d = parse_many_after!(&mut a, parse_ident, Token::Plus);
+        Ok(d)
+    };
+    assert_eq!(f().unwrap(), vec![(), (), ()]);
+    assert!(a.sat(Token::Ident).is_ok());
+
+    let mut a = new_parser_wo_sp("+a");
+    let mut f = || -> Result<Vec<()>, ParseError> {
+        let d = parse_many_after!(&mut a, parse_ident, Token::Plus);
+        Ok(d)
+    };
+    assert_eq!(f().unwrap(), vec![]);
+    assert!(a.sat(Token::Ident).is_ok());
+
+    let mut a = new_parser_wo_sp("a");
+    let mut f = || -> Result<Vec<()>, ParseError> {
+        let d = parse_many_after!(&mut a, parse_ident, Token::Plus);
         Ok(d)
     };
     assert!(f().is_err());
