@@ -99,7 +99,7 @@ macro_rules! parse_many_to {
 
     ($parser:expr, $f:ident, $term:expr) => {{
         let mut ret = vec![];
-        while $parser.sat($term).is_err()  {
+        while $parser.sat($term).is_err() {
             let d = $parser.$f()?;
             ret.push(d);
         }
@@ -221,8 +221,8 @@ pub trait Parse {
         tok: Self::Token,
         f: impl Fn(&mut Self) -> Result<T, Self::Error>,
     ) -> Result<Option<T>, Self::Error>
-        where
-            Self::Token: Clone + Eq,
+    where
+        Self::Token: Clone + Eq,
     {
         let f = |p: &mut Self| {
             p.parse_roll_back(|p: &mut Self| {

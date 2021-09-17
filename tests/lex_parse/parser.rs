@@ -33,7 +33,12 @@ impl Parser {
     }
 
     pub fn new_wo_sp(mut lexer: Lexer) -> Self {
-        let tokens = lexer.tokens().unwrap().into_iter().filter(|tok| tok.tok != Token::Whitespace).collect();
+        let tokens = lexer
+            .tokens()
+            .unwrap()
+            .into_iter()
+            .filter(|tok| tok.tok != Token::Whitespace)
+            .collect();
         let chars = lexer.chars();
         let ctx = ParseCtx::new(chars.clone(), tokens);
         Parser { ctx }

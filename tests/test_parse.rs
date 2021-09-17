@@ -2,9 +2,9 @@ mod lex_parse;
 
 use lex_parse::lexer::*;
 use lex_parse::parser::*;
-use reacto::*;
 use reacto::parse::Parse;
 use reacto::span::{Span, S};
+use reacto::*;
 
 #[test]
 fn test_move() {
@@ -280,7 +280,9 @@ fn test_parse_l1_not() {
 
     // eof
     a.advance();
-    let res = a.parse_l1_not(Token::Ident, |p| p.expect(Token::Ident)).unwrap();
+    let res = a
+        .parse_l1_not(Token::Ident, |p| p.expect(Token::Ident))
+        .unwrap();
     assert!(res.is_none());
 }
 
@@ -307,7 +309,9 @@ fn test_parse_l1_adv() {
 
     // eof
     a.advance();
-    let res = a.parse_l1_adv(Token::Plus, |p| p.expect(Token::Ident)).unwrap();
+    let res = a
+        .parse_l1_adv(Token::Plus, |p| p.expect(Token::Ident))
+        .unwrap();
     assert!(res.is_none());
 }
 
